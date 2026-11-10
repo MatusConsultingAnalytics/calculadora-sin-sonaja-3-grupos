@@ -388,8 +388,7 @@
 
   /* ---------- segmented control ---------- */
   .segmented{
-    display:grid;
-    grid-template-columns:32px 32px 28px 26px;
+    display:flex;
     justify-self:end;
     border:1px solid var(--border);
     border-radius:20px;
@@ -398,6 +397,9 @@
     height:30px;
   }
   .seg-btn{
+    flex:0 0 auto;
+    min-width:30px;
+    padding:0 8px;
     border:none;
     background:transparent;
     cursor:pointer;
@@ -413,7 +415,7 @@
   .seg-btn.active-c{background:var(--group-c);color:#fff;}
   .seg-btn.active-h{background:var(--group-h);color:#fff;}
   .seg-btn.active-none{background:#EDEDED;color:var(--gray-dark);}
-  .seg-btn:not(.active-a):not(.active-b):not(.active-h):not(.active-none):hover{background:#F0F0F0;}
+  .seg-btn:not(.active-a):not(.active-b):not(.active-c):not(.active-h):not(.active-none):hover{background:#F0F0F0;}
 
   /* ---------- controls / footer ---------- */
   .controls{
