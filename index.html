@@ -513,8 +513,7 @@
 <script>
 const GROUPS = {
   A: { key:'A', label:'Marco + Adela', color:'var(--group-a)' },
-  B: { key:'B', label:'Amparo', color:'var(--group-b)' },
-  C: { key:'C', label:'Alicia', color:'var(--group-c)' },
+  B: { key:'B', label:'Alicia + Amparo', color:'var(--group-b)' },
   H: { key:'H', label:'Hortencia', color:'var(--group-h)' }
 };
 
@@ -526,7 +525,7 @@ function valueOf(a, k){ return a.values ? a.values[k] : a.value; }
 const PEOPLE = [
   { key:'M',  name:'Marco',     group:'A' },
   { key:'Ad', name:'Adela',     group:'A' },
-  { key:'Al', name:'Alicia',    group:'C' },
+  { key:'Al', name:'Alicia',    group:'B' },
   { key:'Am', name:'Amparo',    group:'B' },
   { key:'H',  name:'Hortencia', group:'H' }
 ];
@@ -547,7 +546,7 @@ const UNIVERSES = [
       { id:'demayo',   name:'5 de Mayo',   value:11.01629025,      own:own(40, 20, 20, 20, 0), restriction:true, badge:'Irapuato' },
       { id:'pino10',   name:'Pino 10',     value:2.92824,     own:own(40, 20, 20, 20, 0) }
     ],
-    defaults:{ perules:'A', pino10:'A', morelos:'A', antenas1:'B', antenas2:'C', demayo:'C' }
+    defaults:{ perules:'A', pino10:'A', morelos:'A', antenas1:'B', antenas2:'B', demayo:'B' }
   },
   {
     id:'estaciones',
@@ -562,15 +561,14 @@ const UNIVERSES = [
       { id:'xemas', name:'XEMAS-AM', value:4.25585676, own:own(41.50, 20.17, 14.165, 14.165, 10), restriction:true, badge:'Salamanca' },
       { id:'xeemm', name:'XEEMM-AM', value:4.29839964, own:own(25, 25, 25, 25, 0), restriction:true, badge:'Salamanca' }
     ],
-    defaults:{ xhnh:'A', xhya:'A', xhamo:'A', xemas:'A', xhwe:'B', xhcn:'C', xeemm:'C' }
+    defaults:{ xhnh:'A', xhya:'A', xhamo:'A', xemas:'A', xhwe:'B', xhcn:'B', xeemm:'B' }
   }
 ];
 
 // % del grupo Marco+Adela y de Hortencia, derivados del cuadro accionario por persona
 UNIVERSES.forEach(u => u.assets.forEach(a => {
   a.groupAPct = a.own.M + a.own.Ad;
-  a.groupBPct = a.own.Am;
-  a.groupCPct = a.own.Al;
+  a.groupBPct = a.own.Am + a.own.Al;
   a.hortenciaPct = a.own.H;
 }));
 
@@ -632,27 +630,23 @@ function computeUniverse(u, k){
   const targetA = u.assets.reduce((s,a) => s + val(a) * a.groupAPct/100, 0);
   const targetH = u.assets.reduce((s,a) => s + val(a) * (a.hortenciaPct||0)/100, 0);
   const targetB = u.assets.reduce((s,a) => s + val(a) * a.groupBPct/100, 0);
-  const targetC = u.assets.reduce((s,a) => s + val(a) * a.groupCPct/100, 0);
-  let actualA = 0, actualB = 0, actualC = 0, actualH = 0;
+  let actualA = 0, actualB = 0, actualH = 0;
   const sh = allocate(u, k);
   u.assets.forEach(a => {
     const asg = assignments[a.id];
     if(asg.main === 'A') actualA += sh[a.id].g;
     else if(asg.main === 'B') actualB += sh[a.id].g;
-    else if(asg.main === 'C') actualC += sh[a.id].g;
     actualH += sh[a.id].h;
   });
-  const unassigned = total - actualA - actualB - actualC - actualH;
+  const unassigned = total - actualA - actualB - actualH;
   const devA = actualA - targetA;
   const devB = actualB - targetB;
-  const devC = actualC - targetC;
   const devH = actualH - targetH;
   const devAPct = total ? (devA/total*100) : 0;
   const devBPct = total ? (devB/total*100) : 0;
-  const devCPct = total ? (devC/total*100) : 0;
   const devHPct = targetH > 0.0001 ? (devH/targetH*100) : (actualH > 0.0001 ? 100 : 0);
 
-  return { total, targetA, targetB, targetC, targetH, actualA, actualB, actualC, actualH, unassigned, devA, devB, devC, devH, devAPct, devBPct, devCPct, devHPct };
+  return { total, targetA, targetB, targetH, actualA, actualB, actualH, unassigned, devA, devB, devH, devAPct, devBPct, devHPct };
 }
 
 // Valor que recibe y valor que le corresponde (derecho) a cada familiar.
@@ -698,8 +692,7 @@ function peopleTableHTML(u, scs){
 
   const BLOCKS = [
     { cls:'a', label:'Grupo Marco + Adela',   keys:['M','Ad'] },
-    { cls:'b', label:'Amparo', keys:['Am'] },
-    { cls:'c', label:'Alicia', keys:['Al'] },
+    { cls:'b', label:'Grupo Alicia + Amparo', keys:['Al','Am'] },
     { cls:'h', label:'Hortencia',             keys:['H'] }
   ];
   const rows = BLOCKS.filter(b => !(u.noH && b.cls === 'h')).map(b => {
@@ -746,8 +739,9 @@ function valueMatrixHTML(u, k, tabs){
     { cls:'a', label:'Marco',           keys:['M'] },
     { cls:'a', label:'Adela',           keys:['Ad'] },
     { cls:'a', label:'Marco + Adela',   keys:['M','Ad'], group:true },
-    { cls:'b', label:'Amparo',          keys:['Am'], group:true },
-    { cls:'c', label:'Alicia',          keys:['Al'], group:true },
+    { cls:'b', label:'Alicia',          keys:['Al'] },
+    { cls:'b', label:'Amparo',          keys:['Am'] },
+    { cls:'b', label:'Alicia + Amparo', keys:['Al','Am'], group:true },
     { cls:'h', label:'Hortencia',       keys:['H'] },
     { cls:'t', label:'Total',           keys:['M','Ad','Al','Am','H'], group:true }
   ];
@@ -788,9 +782,8 @@ function segmentedHTML(u, a){
   return `
     <div class="segmented" role="group" aria-label="Asignación de ${a.name}">
       <button class="seg-btn ${asg.main==='A' ? 'active-a':''}" title="Marco + Adela" onclick="setMainGroup('${u.id}','${a.id}','A')">A</button>
-      <button class="seg-btn ${asg.main==='B' ? 'active-b':''}" title="Amparo" onclick="setMainGroup('${u.id}','${a.id}','B')">B</button>
-      <button class="seg-btn ${asg.main==='C' ? 'active-c':''}" title="Alicia" onclick="setMainGroup('${u.id}','${a.id}','C')">C</button>
-      ${u.noH ? '' : `<button class="seg-btn ${asg.h ? 'active-h':''}" title="Hortencia (se puede combinar con A, B o C)" onclick="toggleHortencia('${u.id}','${a.id}')">H</button>`}
+      <button class="seg-btn ${asg.main==='B' ? 'active-b':''}" title="Alicia + Amparo" onclick="setMainGroup('${u.id}','${a.id}','B')">B</button>
+      ${u.noH ? '' : `<button class="seg-btn ${asg.h ? 'active-h':''}" title="Hortencia (se puede combinar con A o B)" onclick="toggleHortencia('${u.id}','${a.id}')">H</button>`}
       <button class="seg-btn seg-none ${(!asg.main && !asg.h) ? 'active-none':''}" title="Sin asignar" onclick="clearAssignment('${u.id}','${a.id}')">–</button>
     </div>`;
 }
@@ -843,7 +836,7 @@ function universeHTML(u){
       <div class="universe-total">Valor total del universo: <b>${money(c.total)}</b>${c.unassigned > 0.005 ? ` · ${money(c.unassigned)} sin asignar` : ''}</div>
     </div>
 
-    <div class="summary"${u.noH ? ' style="grid-template-columns:repeat(3,1fr)"' : ''}>
+    <div class="summary"${u.noH ? ' style="grid-template-columns:repeat(2,1fr)"' : ''}>
       <div class="group-panel a">
         <div class="group-name">Marco + Adela (A)</div>
         <div class="group-row"><span>Asignado</span><b>${money(c.actualA)}</b></div>
@@ -854,21 +847,12 @@ function universeHTML(u){
         </div>
       </div>
       <div class="group-panel b">
-        <div class="group-name">Amparo (B)</div>
+        <div class="group-name">Alicia + Amparo (B)</div>
         <div class="group-row"><span>Asignado</span><b>${money(c.actualB)}</b></div>
         <div class="group-row"><span>Objetivo (por % de participación)</span><b>${money(c.targetB)}</b></div>
         <div class="group-row deviation">
           <span>Desviación</span>
           <span class="dev-num">${devText(c.devB)}</span>
-        </div>
-      </div>
-      <div class="group-panel c">
-        <div class="group-name">Alicia (C)</div>
-        <div class="group-row"><span>Asignado</span><b>${money(c.actualC)}</b></div>
-        <div class="group-row"><span>Objetivo (por % de participación)</span><b>${money(c.targetC)}</b></div>
-        <div class="group-row deviation">
-          <span>Desviación</span>
-          <span class="dev-num">${devText(c.devC)}</span>
         </div>
       </div>
       ${u.noH ? '' : `<div class="group-panel h">
